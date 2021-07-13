@@ -1,15 +1,31 @@
 from selenium import webdriver
 import time
+import re
+import pandas as pd
 
 # Setup Driver
-driver = webdriver.Chrome()
+options = webdriver.chrome.options.Options()
+options.add_argument('--headless')
+driver = webdriver.Chrome(options=options)
 
 # Where I will gather data from
 host = 'https://www.mapdevelopers.com/distance_from_to.php'
 
+# Pull in spreadsheet from excel into pandas
+df = pd.read_excel('distances.xlsm', header=1)
+# Drop population column
+df = df.drop('Unnamed: 1', axis=1)
+# Fix columns
+df.columns = ['zip'] + list(df.columns[1:])
+# Purge useless rows (non data)
+df = df.drop(0)
+
 # Origins and destinations from excel spreadsheet
-origins = ['78731', '78749']
-destinations = ['3509 Mt. Barker Dr.']
+origins = list(df['zip'])
+destinations = list(df.columns)[1:] # [1:] to ignore the zip column
+
+print(origins, destinations)
+exit()
 
 # Object holding all the data
 data = {
@@ -25,8 +41,10 @@ for origin in origins:
         # Process destination to replace all spaces with html safe characters
         destination = destination.replace(' ', '%20')
         # Get Data from website
-        driver.implicitly_wait(3)
         driver.get(host + f'?&from={origin}&to={destination}')
         distances = driver.find_element_by_id('driving_status')
-        time.sleep(3)
-        print(distances.text)
+        # Rest for a bit so that the update can occur
+        time.sleep(1.5)
+        # Pull out miles
+        miles = re.search(r'\d*\.?\d+', distances.text).group()
+        print(miles)

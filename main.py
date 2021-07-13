@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 import time
 import re
 import pandas as pd
@@ -20,14 +21,36 @@ df.columns = ['zip'] + list(df.columns[1:])
 # Purge useless rows (non data)
 df = df.drop(0)
 
-#Ask for starting row for system
-starting_row = input('What zipcode row should I start from')
 # Origins and destinations from excel spreadsheet
-origins = list(df['zip'])[int(starting_row):]
+origins = list(df['zip'])
 destinations = list(df.columns)[1:] # [1:] to ignore the zip column
 
 # Object holding all the data
 data = {}
+
+# Get info from website
+def get_data(origin, destination, depth=0):
+    # Process destination to replace all spaces with html safe characters
+    destination = destination.replace(' ', '%20')
+    # Get Data from website
+    driver.get(host + f'?&from={origin}&to={destination}')
+    try:
+        distances = driver.find_element_by_id('driving_status')
+    except Error:
+        # If any error is found in finding the element, just return 0.0
+        return '0.0'
+    # Rest for a bit so that the update can occur
+    time.sleep(5)
+    # Pull out miles
+    miles = re.search(r'\d*\.?\d+', distances.text).group()
+    # If already third try, just return miles no matter what
+    if depth > 3:
+        return miles
+    # Ensure that you got the miles before returning it, if not try again.
+    if miles == '0.0':
+        return get_data(origin, destination, depth=depth+1)
+    else:
+        return miles
 
 # Saving function
 def save_data(data, save_file):
@@ -40,18 +63,9 @@ for origin in origins:
     # Add origin to data set
     data[origin] = {}
     for destination in destinations:
-        # Process destination to replace all spaces with html safe characters
-        html_destination = destination.replace(' ', '%20')
-        # Get Data from website
-        driver.get(host + f'?&from={origin}&to={html_destination}')
-        distances = driver.find_element_by_id('driving_status')
-        # Rest for a bit so that the update can occur
-        time.sleep(5)
-        # Pull out miles
-        miles = re.search(r'\d*\.?\d+', distances.text).group()
         # Add miles under destination label for origin
-        data[origin][destination] = miles
+        data[origin][destination] = get_data(origin, destination)
     # Make a backup csv of each origin every time you go through
-    save_data(data, f'data_partial_{origin}.csv')
+    save_data(data, f'data_partial.csv')
 # Make the final one
 save_data(data, 'data_final.csv')

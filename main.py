@@ -20,8 +20,10 @@ df.columns = ['zip'] + list(df.columns[1:])
 # Purge useless rows (non data)
 df = df.drop(0)
 
+#Ask for starting row for system
+starting_row = input('What zipcode row should I start from')
 # Origins and destinations from excel spreadsheet
-origins = list(df['zip'])
+origins = list(df['zip'])[int(starting_row):]
 destinations = list(df.columns)[1:] # [1:] to ignore the zip column
 
 # Object holding all the data
@@ -44,12 +46,12 @@ for origin in origins:
         driver.get(host + f'?&from={origin}&to={html_destination}')
         distances = driver.find_element_by_id('driving_status')
         # Rest for a bit so that the update can occur
-        time.sleep(3)
+        time.sleep(5)
         # Pull out miles
         miles = re.search(r'\d*\.?\d+', distances.text).group()
         # Add miles under destination label for origin
         data[origin][destination] = miles
     # Make a backup csv of each origin every time you go through
-    save_data(data, 'data_partial.csv')
+    save_data(data, f'data_partial_{origin}.csv')
 # Make the final one
 save_data(data, 'data_final.csv')

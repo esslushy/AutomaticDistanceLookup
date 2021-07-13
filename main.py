@@ -36,18 +36,15 @@ def get_data(origin, destination, depth=0):
     driver.get(host + f'?&from={origin}&to={destination}')
     try:
         distances = driver.find_element_by_id('driving_status')
-    except Error:
+    except NoSuchElementException:
         # If any error is found in finding the element, just return 0.0
         return '0.0'
     # Rest for a bit so that the update can occur
-    time.sleep(5)
+    time.sleep(3)
     # Pull out miles
     miles = re.search(r'\d*\.?\d+', distances.text).group()
-    # If already third try, just return miles no matter what
-    if depth > 3:
-        return miles
-    # Ensure that you got the miles before returning it, if not try again.
-    if miles == '0.0':
+    # Ensure that you got the miles before returning it, if not try again, but only 3 tries
+    if miles == '0.0' and depth < 3:
         return get_data(origin, destination, depth=depth+1)
     else:
         return miles

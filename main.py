@@ -3,6 +3,9 @@ from selenium.common.exceptions import NoSuchElementException
 import time
 import re
 import pandas as pd
+from csv import DictWriter
+
+csv_file = 'destination_data.csv'
 
 # Setup Driver
 options = webdriver.chrome.options.Options()
@@ -17,16 +20,13 @@ df = pd.read_excel('distances.xlsm', header=1)
 # Drop population column
 df = df.drop('Unnamed: 1', axis=1)
 # Fix columns
-df.columns = ['zip'] + list(df.columns[1:])
+df.columns = ['zipcode'] + list(df.columns[1:])
 # Purge useless rows (non data)
 df = df.drop(0)
 
 # Origins and destinations from excel spreadsheet
-origins = list(df['zip'])
-destinations = list(df.columns)[1:] # [1:] to ignore the zip column
-
-# Object holding all the data
-data = {}
+origins = list(df['zipcode'])
+destinations = list(df.columns)[1:] # [1:] to ignore the zipcode column
 
 # Get info from website
 def get_data(origin, destination, depth=0):
@@ -49,20 +49,28 @@ def get_data(origin, destination, depth=0):
     else:
         return miles
 
+# Setup csv file
+with open(csv_file, 'w+') as f:
+    # Creat dictwriter
+    writer = DictWriter(f, fieldnames=df.columns)
+    # Write to file
+    writer.writeheader()
+
 # Saving function
 def save_data(data, save_file):
-    distances_df = pd.DataFrame.from_dict(data, orient='index')
-    # distances_df.to_excel('data.xlsx')
-    distances_df.to_csv(save_file, sep=',')
+    # Open csv file
+    with open(save_file, 'a') as f:
+        # Creat dictwriter
+        writer = DictWriter(f, fieldnames=df.columns)
+        # Write to file
+        writer.writerow(data)
 
 # Loop through each origin and mark its connection to each destination
 for origin in origins:
     # Add origin to data set
-    data[origin] = {}
+    data = {'zipcode' : origin}
     for destination in destinations:
         # Add miles under destination label for origin
-        data[origin][destination] = get_data(origin, destination)
+        data[destination] = get_data(origin, destination)
     # Make a backup csv of each origin every time you go through
-    save_data(data, f'data_partial.csv')
-# Make the final one
-save_data(data, 'data_final.csv')
+    save_data(data, csv_file)

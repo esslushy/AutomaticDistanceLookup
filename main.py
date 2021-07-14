@@ -6,9 +6,12 @@ import pandas as pd
 from csv import DictWriter
 import os
 
-data_file = input('Input name of data file e.g. distances.xlsm: ')
-save_file = input('Input name of output file e.g. data.csv: ')
-start_from = input('Input row to start from starting with 0 index e.g. 0 for the first row or 2 for the third row: ')
+# Customization options
+data_file = input('Input name of data file. default: distances.xlsm: ') or 'distances.xlsm'
+save_file = input('Input name of output file. default data.csv: ') or 'data.csv'
+start_from = input('Input row to start from starting with 0 index e.g. 0 for the first row or 2 for the third row. default: 0: ') or 0
+# Cast to int for indicing
+start_from = int(start_from)
 
 # Setup Driver
 options = webdriver.chrome.options.Options()

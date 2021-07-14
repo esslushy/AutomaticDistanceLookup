@@ -5,7 +5,9 @@ import re
 import pandas as pd
 from csv import DictWriter
 
-csv_file = 'destination_data.csv'
+data_file = input('Input name of data file e.g. distances.xlsm: ')
+csv_file = input('Input name of output file e.g. data.csv: ')
+start_from = input('Input row to start from starting with 0 index e.g. 0 for the first row or 2 for the third row: ')
 
 # Setup Driver
 options = webdriver.chrome.options.Options()
@@ -16,7 +18,7 @@ driver = webdriver.Chrome(options=options)
 host = 'https://www.mapdevelopers.com/distance_from_to.php'
 
 # Pull in spreadsheet from excel into pandas
-df = pd.read_excel('distances.xlsm', header=1)
+df = pd.read_excel(data_file, header=1)
 # Drop population column
 df = df.drop('Unnamed: 1', axis=1)
 # Fix columns
@@ -25,7 +27,7 @@ df.columns = ['zipcode'] + list(df.columns[1:])
 df = df.drop(0)
 
 # Origins and destinations from excel spreadsheet
-origins = list(df['zipcode'])
+origins = list(df['zipcode'])[start_from:] # Start_from
 destinations = list(df.columns)[1:] # [1:] to ignore the zipcode column
 
 # Get info from website
@@ -71,6 +73,7 @@ for origin in origins:
     data = {'zipcode' : origin}
     for destination in destinations:
         # Add miles under destination label for origin
+        print(f'Getting data for distance from {origin} to {destination}')
         data[destination] = get_data(origin, destination)
     # Make a backup csv of each origin every time you go through
     save_data(data, csv_file)

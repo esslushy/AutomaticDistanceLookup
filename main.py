@@ -4,9 +4,10 @@ import time
 import re
 import pandas as pd
 from csv import DictWriter
+import os
 
 data_file = input('Input name of data file e.g. distances.xlsm: ')
-csv_file = input('Input name of output file e.g. data.csv: ')
+save_file = input('Input name of output file e.g. data.csv: ')
 start_from = input('Input row to start from starting with 0 index e.g. 0 for the first row or 2 for the third row: ')
 
 # Setup Driver
@@ -52,11 +53,12 @@ def get_data(origin, destination, depth=0):
         return miles
 
 # Setup csv file
-with open(csv_file, 'w+') as f:
-    # Creat dictwriter
-    writer = DictWriter(f, fieldnames=df.columns)
-    # Write to file
-    writer.writeheader()
+if start_from == 0 or not os.path.isfile(save_file):
+    with open(save_file, 'w+') as f:
+        # Creat dictwriter
+        writer = DictWriter(f, fieldnames=df.columns)
+        # Write to file
+        writer.writeheader()
 
 # Saving function
 def save_data(data, save_file):
@@ -76,4 +78,4 @@ for origin in origins:
         print(f'Getting data for distance from {origin} to {destination}')
         data[destination] = get_data(origin, destination)
     # Make a backup csv of each origin every time you go through
-    save_data(data, csv_file)
+    save_data(data, save_file)

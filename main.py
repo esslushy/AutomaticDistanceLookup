@@ -8,7 +8,7 @@ import os
 
 # Customization options
 data_file = input('Input name of data file. default: distances.xlsm: ') or 'distances.xlsm'
-save_file = input('Input name of output file. default data.csv: ') or 'data.csv'
+save_file = input('Input name of output file. default destination_data.csv: ') or 'data.csv'
 start_from = input('Input row to start from starting with 0 index e.g. 0 for the first row or 2 for the third row. default: 0: ') or 0
 # Cast to int for indicing
 start_from = int(start_from)
@@ -48,7 +48,10 @@ def get_data(origin, destination, depth=0):
     # Rest for a bit so that the update can occur
     time.sleep(3)
     # Pull out miles
-    miles = re.search(r'\d*\.?\d+', distances.text).group()
+    try:
+        miles = re.search(r'\d*\.?\d+', distances.text).group()
+    except AttributeError:
+        return '0.0'
     # Ensure that you got the miles before returning it, if not try again, but only 3 tries
     if miles == '0.0' and depth < 3:
         return get_data(origin, destination, depth=depth+1)

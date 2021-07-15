@@ -8,7 +8,7 @@ import os
 
 # Customization options
 data_file = input('Input name of data file. default: distances.xlsm: ') or 'distances.xlsm'
-save_file = input('Input name of output file. default destination_data.csv: ') or 'data.csv'
+save_file = input('Input name of output file. default data.csv: ') or 'data.csv'
 start_from = input('Input row to start from starting with 0 index e.g. 0 for the first row or 2 for the third row. default: 0: ') or 0
 # Cast to int for indicing
 start_from = int(start_from)
